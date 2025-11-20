@@ -198,6 +198,43 @@
                     </div>
                 </div>
 
+                <!-- 短链服务设置 -->
+                <hr class="my-6 border-slate-200">
+                
+                <h2 class="text-lg font-bold text-slate-800 mb-4">短链服务设置</h2>
+                
+                <div class="space-y-4 mb-6">
+                    <!-- 启用开关 -->
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <div>
+                            <span class="text-sm font-bold text-slate-700">启用短链服务</span>
+                            <p class="text-xs text-slate-400 mt-1">分享时使用短链接代替长URL</p>
+                        </div>
+                        <div class="relative">
+                            <input type="checkbox" id="shorturl-enabled" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-blue-500 peer-focus:ring-2 peer-focus:ring-blue-300 transition-colors"></div>
+                            <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                        </div>
+                    </label>
+                    
+                    <!-- API地址 -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">API 地址</label>
+                        <input type="text" id="shorturl-api"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                            placeholder="https://your-worker.workers.dev">
+                    </div>
+                    
+                    <!-- API Key -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">API Key</label>
+                        <input type="password" id="shorturl-apikey"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                            placeholder="your-api-key">
+                    </div>
+                </div>
+
+
                 <div class="flex gap-3">
                     <button onclick="closeSettingsModal()"
                         class="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors">取消</button>

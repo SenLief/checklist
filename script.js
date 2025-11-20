@@ -472,29 +472,103 @@ function deleteCurrentList() {
     }
 }
 
+// --- Short URL Configuration ---
+let shortUrlConfig = JSON.parse(localStorage.getItem('fileMemoShortUrlConfig')) || { enabled: false, apiUrl: '', apiKey: '' };
+let shortUrlCache = JSON.parse(localStorage.getItem('fileMemoShortUrlCache')) || {};
+
 // --- S3 Synchronization ---
 let s3Client = null;
 let s3Config = JSON.parse(localStorage.getItem('fileMemoS3Config')) || null;
-function shareList() {
+async function shareList() {
     if (!currentListId) return;
     const list = lists.find(l => l.id === currentListId);
     if (!list) return;
 
-    // Serialize and Encode
+    // Serialize and Encode to create long URL
     const json = JSON.stringify(list);
-    // Encode to Base64 (UTF-8 safe)
     const encoded = btoa(unescape(encodeURIComponent(json)));
-    // URL-encode the Base64 string to handle '+', '/', '=' safely in query params
     const safeEncoded = encodeURIComponent(encoded);
-    const url = `${window.location.origin}${window.location.pathname}?share=${safeEncoded}`;
+    const longUrl = `${window.location.origin}${window.location.pathname}?share=${safeEncoded}`;
+
+    let finalUrl = longUrl;
+
+    // Try to create short URL if enabled
+    if (shortUrlConfig.enabled && shortUrlConfig.apiUrl && shortUrlConfig.apiKey) {
+        try {
+            // Check cache first
+            const cacheKey = longUrl;
+            const cached = shortUrlCache[cacheKey];
+
+            // Use cached if not expired
+            if (cached && cached.expiresAt && new Date(cached.expiresAt) > new Date()) {
+                finalUrl = cached.shortUrl;
+                console.log('Using cached short URL:', finalUrl);
+            } else {
+                // Create short URL via API
+                const shortUrl = await createShortUrl(longUrl);
+                if (shortUrl) {
+                    finalUrl = shortUrl;
+                } else {
+                    console.warn('Failed to create short URL, using long URL');
+                }
+            }
+        } catch (error) {
+            console.error('Short URL error:', error);
+            // Fall back to long URL on error
+        }
+    }
 
     // Copy to clipboard
-    navigator.clipboard.writeText(url).then(() => {
-        alert('分享链接已复制到剪贴板！\n发送给朋友即可查看。');
+    navigator.clipboard.writeText(finalUrl).then(() => {
+        const message = finalUrl === longUrl
+            ? '分享链接已复制到剪贴板！\n发送给朋友即可查看。'
+            : '短链接已复制到剪贴板！\n发送给朋友即可查看。';
+        alert(message);
     }).catch(err => {
         console.error('Failed to copy: ', err);
-        prompt('复制以下链接分享：', url);
+        prompt('复制以下链接分享：', finalUrl);
     });
+}
+
+async function createShortUrl(longUrl) {
+    try {
+        const response = await fetch(shortUrlConfig.apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': shortUrlConfig.apiKey
+            },
+            body: JSON.stringify({
+                url: longUrl,
+                expirationSeconds: 31536000 // 1 year
+            })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Short URL API error:', response.status, errorText);
+            return null;
+        }
+
+        const data = await response.json();
+
+        // Cache the result
+        const cacheKey = longUrl;
+        shortUrlCache[cacheKey] = {
+            shortUrl: data.shortUrl,
+            slug: data.slug,
+            createdAt: new Date().toISOString(),
+            expiresAt: data.expiresAt
+        };
+
+        // Save cache to localStorage
+        localStorage.setItem('fileMemoShortUrlCache', JSON.stringify(shortUrlCache));
+
+        return data.shortUrl;
+    } catch (error) {
+        console.error('Failed to create short URL:', error);
+        return null;
+    }
 }
 
 function checkSharedUrl() {
@@ -754,6 +828,11 @@ const s3BucketInput = document.getElementById('s3-bucket');
 const s3AkInput = document.getElementById('s3-ak');
 const s3SkInput = document.getElementById('s3-sk');
 
+// Short URL Inputs
+const shortUrlEnabledInput = document.getElementById('shorturl-enabled');
+const shortUrlApiInput = document.getElementById('shorturl-api');
+const shortUrlApiKeyInput = document.getElementById('shorturl-apikey');
+
 // Use AWS SDK v2 (Global AWS object)
 
 function getS3Client() {
@@ -776,6 +855,7 @@ function getS3Client() {
 }
 
 function showSettingsModal() {
+    // Load S3 config
     if (s3Config) {
         s3EndpointInput.value = s3Config.endpoint || '';
         s3RegionInput.value = s3Config.region || '';
@@ -783,6 +863,14 @@ function showSettingsModal() {
         s3AkInput.value = s3Config.ak || '';
         s3SkInput.value = s3Config.sk || '';
     }
+
+    // Load short URL config
+    if (shortUrlConfig) {
+        shortUrlEnabledInput.checked = shortUrlConfig.enabled || false;
+        shortUrlApiInput.value = shortUrlConfig.apiUrl || '';
+        shortUrlApiKeyInput.value = shortUrlConfig.apiKey || '';
+    }
+
     modalSettings.classList.remove('hidden');
     requestAnimationFrame(() => {
         modalSettingsContent.classList.remove('scale-95', 'opacity-0');
@@ -797,7 +885,8 @@ function closeSettingsModal() {
 }
 
 function saveSettings() {
-    const newConfig = {
+    // Save S3 config
+    const newS3Config = {
         endpoint: s3EndpointInput.value.trim(),
         region: s3RegionInput.value.trim(),
         bucket: s3BucketInput.value.trim(),
@@ -805,16 +894,36 @@ function saveSettings() {
         sk: s3SkInput.value.trim()
     };
 
-    if (!newConfig.bucket || !newConfig.ak || !newConfig.sk) {
-        alert('Bucket, Access Key, and Secret Key are required.');
+    // Save short URL config
+    const newShortUrlConfig = {
+        enabled: shortUrlEnabledInput.checked,
+        apiUrl: shortUrlApiInput.value.trim(),
+        apiKey: shortUrlApiKeyInput.value.trim()
+    };
+
+    // Validate S3 config if any field is filled
+    const hasS3Config = newS3Config.bucket || newS3Config.ak || newS3Config.sk;
+    if (hasS3Config && (!newS3Config.bucket || !newS3Config.ak || !newS3Config.sk)) {
+        alert('S3 配置不完整：Bucket、Access Key 和 Secret Key 都是必需的。');
         return;
     }
 
-    s3Config = newConfig;
-    localStorage.setItem('fileMemoS3Config', JSON.stringify(s3Config));
-    s3Client = null; // Reset client
+    // Save configs
+    if (hasS3Config) {
+        s3Config = newS3Config;
+        localStorage.setItem('fileMemoS3Config', JSON.stringify(s3Config));
+        s3Client = null; // Reset client
+    }
+
+    shortUrlConfig = newShortUrlConfig;
+    localStorage.setItem('fileMemoShortUrlConfig', JSON.stringify(shortUrlConfig));
+
     closeSettingsModal();
-    downloadData(); // Try to sync immediately
+
+    // Try to sync S3 if configured
+    if (hasS3Config) {
+        downloadData();
+    }
 }
 
 async function uploadData() {
