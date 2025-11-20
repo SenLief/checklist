@@ -1,0 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
+body {
+    font-family: 'Inter', 'Noto Sans SC', sans-serif;
+    background-color: #f1f5f9;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+}
+
+/* 自定义滚动条 (更适合 PC) */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 移动端隐藏滚动条 */
+@media (max-width: 768px) {
+    ::-webkit-scrollbar {
+        width: 0px;
+    }
+}
+
+/* 动画 */
+.card-enter {
+    animation: cardIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes cardIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 滑动交互样式 */
+.scrubbing {
+    cursor: ew-resize;
+    transform: scale(1.05);
+    z-index: 50;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 颜色主题定义 */
+.theme-blue {
+    --main: #3b82f6;
+    --light: #eff6ff;
+    --text: #1e40af;
+    --bg-hover: #dbeafe;
+}
+
+.theme-indigo {
+    --main: #6366f1;
+    --light: #e0e7ff;
+    --text: #3730a3;
+    --bg-hover: #e0e7ff;
+}
+
+.theme-emerald {
+    --main: #10b981;
+    --light: #ecfdf5;
+    --text: #065f46;
+    --bg-hover: #d1fae5;
+}
+
+.theme-amber {
+    --main: #f59e0b;
+    --light: #fffbeb;
+    --text: #92400e;
+    --bg-hover: #fef3c7;
+}
+
+.theme-rose {
+    --main: #f43f5e;
+    --light: #fff1f2;
+    --text: #9f1239;
+    --bg-hover: #ffe4e6;
+}
+
+.theme-purple {
+    --main: #a855f7;
+    --light: #f3e8ff;
+    --text: #6b21a8;
+    --bg-hover: #e9d5ff;
+}
+
+/* 选中状态下的左侧列表项 (PC) */
+.list-item-active {
+    background-color: var(--bg-hover);
+    border-color: var(--main);
+}

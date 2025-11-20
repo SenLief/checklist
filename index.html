@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>检查单</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="h-screen flex flex-col items-center justify-center text-slate-800 md:p-8">
+
+    <!-- 主容器: PC端更宽，flex布局; 移动端全屏 -->
+    <div class="w-full h-full md:max-w-6xl md:h-[85vh] bg-white md:rounded-[32px] shadow-none md:shadow-2xl md:border border-white flex flex-col md:flex-row overflow-hidden relative md:ring-8 ring-slate-200/50 transition-all duration-500"
+        id="app-container">
+
+        <!-- ================= 左侧栏：检查单列表 (Home) ================= -->
+        <!-- 移动端: 绝对定位覆盖; PC端: 相对定位，固定宽度 -->
+        <div id="view-home"
+            class="flex flex-col w-full h-full absolute inset-0 bg-slate-50 transition-transform duration-300 z-20 md:static md:z-0 md:w-80 md:border-r md:border-slate-100 md:translate-x-0 shrink-0">
+
+            <!-- 头部 -->
+            <div class="pt-8 pb-4 px-6 bg-white shrink-0 md:pt-8 flex justify-between items-start">
+                <div>
+                    <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">我的检查单</h1>
+                    <p class="text-xs text-slate-400 font-medium mt-1">My Checklists</p>
+                </div>
+                <div id="sync-status"
+                    class="hidden text-[10px] font-bold px-2 py-1 rounded bg-slate-100 text-slate-400 flex items-center gap-1 mt-1">
+                    <i class="fa-solid fa-cloud"></i> <span>Ready</span>
+                </div>
+            </div>
+
+            <!-- 列表容器 -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3 pb-24 md:pb-4" id="lists-container">
+                <!-- Lists render here -->
+            </div>
+
+            <!-- 底部浮动按钮 (移动端) -->
+            <div class="absolute bottom-6 right-6 z-20 md:hidden">
+                <button onclick="showCreateModal()"
+                    class="w-14 h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl shadow-lg shadow-slate-300 flex items-center justify-center transition-transform active:scale-90">
+                    <i class="fa-solid fa-plus text-xl"></i>
+                </button>
+            </div>
+
+            <!-- 底部新建按钮 (PC端) -->
+            <div class="hidden md:flex p-4 border-t border-slate-100 bg-white gap-2">
+                <button onclick="showSettingsModal()"
+                    class="w-12 h-12 bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-600 rounded-xl border border-slate-200 flex items-center justify-center transition-all active:scale-95"
+                    title="设置">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+                <button onclick="showCreateModal()"
+                    class="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-lg shadow-slate-200 flex items-center justify-center gap-2 transition-all active:scale-95 text-sm font-bold">
+                    <i class="fa-solid fa-plus"></i> 新建检查单
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= 右侧：详情页 (Detail) ================= -->
+        <!-- 移动端: 默认隐藏在右侧; PC端: 默认显示占据剩余空间 -->
+        <div id="view-detail"
+            class="flex flex-col w-full h-full absolute inset-0 bg-white translate-x-full transition-transform duration-300 z-30 md:static md:z-0 md:flex-1 md:translate-x-0">
+
+            <!-- PC端空状态 (未选择时显示) -->
+            <div id="pc-empty-state"
+                class="hidden md:flex flex-col items-center justify-center h-full text-slate-300 select-none">
+                <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-arrow-left text-3xl opacity-30"></i>
+                </div>
+                <p class="font-medium">请从左侧选择一个检查单</p>
+            </div>
+
+            <!-- 详情内容容器 -->
+            <div id="detail-content-wrapper" class="flex flex-col h-full w-full hidden md:hidden">
+                <!-- JS control visibility -->
+
+                <!-- 头部 -->
+                <div
+                    class="pt-8 pb-4 px-6 bg-white border-b border-slate-50 md:border-none shrink-0 z-10 flex flex-col">
+                    <!-- 导航栏：返回按钮 + 操作按钮 -->
+                    <div class="flex justify-between items-center mb-4">
+                        <button onclick="goHome()"
+                            class="md:hidden w-8 h-8 -ml-2 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <!-- PC端占位，保持布局一致 -->
+                        <div class="hidden md:block"></div>
+
+                        <div class="flex gap-2">
+                            <button onclick="shareList()"
+                                class="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                title="分享">
+                                <i class="fa-solid fa-share-nodes text-xs"></i>
+                            </button>
+                            <button onclick="editList()"
+                                class="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 hover:bg-slate-50 hover:text-slate-600 transition-colors"
+                                title="编辑">
+                                <i class="fa-solid fa-pen text-xs"></i>
+                            </button>
+                            <button onclick="deleteCurrentList()"
+                                class="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                                title="删除">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 标题与统计 -->
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-end">
+                        <div>
+                            <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight"
+                                id="detail-title">检查单标题</h1>
+                            <p class="text-xs text-slate-400 mt-1 font-mono" id="detail-date">Created recently</p>
+                        </div>
+                        <div class="flex gap-6 mt-4 md:mt-0">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">待办项</span>
+                                <span class="text-xl md:text-2xl font-black mt-0.5 theme-text-color"
+                                    id="detail-count">0</span>
+                            </div>
+                            <div class="w-px h-8 bg-slate-100"></div>
+                            <div class="flex flex-col">
+                                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">总份数</span>
+                                <span class="text-xl md:text-2xl font-black text-slate-600 mt-0.5"
+                                    id="detail-copies">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 列表内容 -->
+                <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 relative bg-slate-50/30" id="items-container">
+                    <!-- Items render here -->
+                </div>
+
+                <!-- 底部输入区 -->
+                <div
+                    class="p-5 bg-gradient-to-t from-white via-white to-transparent z-20 md:bg-white md:border-t md:border-slate-100">
+                    <div
+                        class="bg-white md:bg-slate-50 p-2 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] md:shadow-none border border-slate-100 md:border-slate-200 flex items-center gap-2 pl-4">
+                        <input type="text" id="item-input"
+                            class="flex-1 py-3 bg-transparent border-none outline-none text-slate-700 placeholder-slate-400 font-medium"
+                            placeholder="添加新项目..." autocomplete="off">
+
+                        <button onclick="addItem()" id="add-btn"
+                            class="theme-bg-color text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-all shrink-0 active:scale-95">
+                            <i class="fa-solid fa-plus text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 弹窗：设置 ================= -->
+        <div id="modal-settings"
+            class="hidden absolute inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-4 transition-opacity duration-300">
+            <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl mb-4 md:mb-0 scale-95 opacity-0 transition-all duration-300"
+                id="modal-settings-content">
+                <h2 class="text-lg font-bold text-slate-800 mb-4">同步设置 (S3)</h2>
+
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Endpoint (Optional)</label>
+                        <input type="text" id="s3-endpoint"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                            placeholder="https://s3.amazonaws.com or R2/MinIO URL">
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Region</label>
+                            <input type="text" id="s3-region"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                                placeholder="us-east-1">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Bucket Name</label>
+                            <input type="text" id="s3-bucket"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                                placeholder="my-backup-bucket">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Access Key ID</label>
+                        <input type="password" id="s3-ak"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                            placeholder="AKIA...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Secret Access Key</label>
+                        <input type="password" id="s3-sk"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                            placeholder="Secret...">
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="closeSettingsModal()"
+                        class="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors">取消</button>
+                    <button onclick="saveSettings()"
+                        class="flex-1 py-3 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200">保存并同步</button>
+                </div>
+
+                <p class="text-[10px] text-slate-400 mt-4 text-center">
+                    <i class="fa-solid fa-lock"></i> 密钥仅保存在本地浏览器中
+                </p>
+            </div>
+        </div>
+
+        <!-- ================= 弹窗：创建/编辑检查单 ================= -->
+        <div id="modal-create"
+            class="hidden absolute inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-4 transition-opacity duration-300">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl mb-4 md:mb-0 scale-95 opacity-0 transition-all duration-300"
+                id="modal-content">
+                <h2 class="text-lg font-bold text-slate-800 mb-4" id="modal-title">新建检查单</h2>
+
+                <label class="block text-xs font-bold text-slate-400 uppercase mb-2">检查单名称</label>
+                <input type="text" id="list-name-input"
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mb-6 font-medium text-slate-700 focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                    placeholder="例如：会议材料">
+
+                <label class="block text-xs font-bold text-slate-400 uppercase mb-3">选择颜色</label>
+                <div class="flex justify-between gap-2 mb-8">
+                    <button onclick="selectColor('blue')"
+                        class="color-btn w-8 h-8 rounded-full bg-blue-500 ring-offset-2 ring-blue-500 transition-all scale-110 ring-2"
+                        data-color="blue"></button>
+                    <button onclick="selectColor('indigo')"
+                        class="color-btn w-8 h-8 rounded-full bg-indigo-500 ring-offset-2 ring-indigo-500 transition-all opacity-40 hover:opacity-100"
+                        data-color="indigo"></button>
+                    <button onclick="selectColor('emerald')"
+                        class="color-btn w-8 h-8 rounded-full bg-emerald-500 ring-offset-2 ring-emerald-500 transition-all opacity-40 hover:opacity-100"
+                        data-color="emerald"></button>
+                    <button onclick="selectColor('amber')"
+                        class="color-btn w-8 h-8 rounded-full bg-amber-500 ring-offset-2 ring-amber-500 transition-all opacity-40 hover:opacity-100"
+                        data-color="amber"></button>
+                    <button onclick="selectColor('rose')"
+                        class="color-btn w-8 h-8 rounded-full bg-rose-500 ring-offset-2 ring-rose-500 transition-all opacity-40 hover:opacity-100"
+                        data-color="rose"></button>
+                    <button onclick="selectColor('purple')"
+                        class="color-btn w-8 h-8 rounded-full bg-purple-500 ring-offset-2 ring-purple-500 transition-all opacity-40 hover:opacity-100"
+                        data-color="purple"></button>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="closeModal()"
+                        class="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors">取消</button>
+                    <button onclick="saveList()"
+                        class="flex-1 py-3 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200">保存</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1499.0.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
