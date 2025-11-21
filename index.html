@@ -28,9 +28,15 @@
                     <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">我的检查单</h1>
                     <p class="text-xs text-slate-400 font-medium mt-1">My Checklists</p>
                 </div>
-                <div id="sync-status"
-                    class="hidden text-[10px] font-bold px-2 py-1 rounded bg-slate-100 text-slate-400 flex items-center gap-1 mt-1">
-                    <i class="fa-solid fa-cloud"></i> <span>Ready</span>
+                <div class="flex items-center gap-3 mt-1">
+                    <div id="sync-status"
+                        class="hidden text-[10px] font-bold px-2 py-1 rounded bg-slate-100 text-slate-400 flex items-center gap-1">
+                        <i class="fa-solid fa-cloud"></i> <span>Ready</span>
+                    </div>
+                    <button onclick="showSettingsModal()"
+                        class="md:hidden w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
                 </div>
             </div>
 
@@ -200,9 +206,9 @@
 
                 <!-- 短链服务设置 -->
                 <hr class="my-6 border-slate-200">
-                
+
                 <h2 class="text-lg font-bold text-slate-800 mb-4">短链服务设置</h2>
-                
+
                 <div class="space-y-4 mb-6">
                     <!-- 启用开关 -->
                     <label class="flex items-center justify-between cursor-pointer">
@@ -212,11 +218,15 @@
                         </div>
                         <div class="relative">
                             <input type="checkbox" id="shorturl-enabled" class="sr-only peer">
-                            <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-blue-500 peer-focus:ring-2 peer-focus:ring-blue-300 transition-colors"></div>
-                            <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                            <div
+                                class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-blue-500 peer-focus:ring-2 peer-focus:ring-blue-300 transition-colors">
+                            </div>
+                            <div
+                                class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5">
+                            </div>
                         </div>
                     </label>
-                    
+
                     <!-- API地址 -->
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase mb-1">API 地址</label>
@@ -224,7 +234,7 @@
                             class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-slate-900 focus:outline-none"
                             placeholder="https://your-worker.workers.dev">
                     </div>
-                    
+
                     <!-- API Key -->
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase mb-1">API Key</label>
